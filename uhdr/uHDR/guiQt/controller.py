@@ -1065,7 +1065,8 @@ class HDRviewerController():
         if self.viewerProcess:
             # the display HDR process is already running
             # close current
-            subprocess.run(['taskkill', '/F', '/T', '/IM', "HDRImageViewer*"],capture_output=False)
+            # subprocess.run(['taskkill', '/F', '/T', '/IM', "HDRImageViewer*"],capture_output=False)
+            subprocess.run(['pkill', '-f', 'HDRImageViewer'], check=True)
             self.viewerProcess = None
 # ------------------------------------------------------------------------------------------
 # ---- Class LchColorSelectorController ----------------------------------------------------
