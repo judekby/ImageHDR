@@ -68,7 +68,7 @@ def loadPref():
 
     Returns (Dict)
     """
-    prefs_path = Path('../preferences/prefs.json').resolve()
+    prefs_path = Path('./prefs.json').resolve()
     if prefs_path.is_file():
         with prefs_path.open() as f:
             return json.load(f)
@@ -87,7 +87,7 @@ def savePref():
     }
     if verbose:
         print(" [PREF] >> savePref(", pUpdate, ")")
-    prefs_path = Path('../preferences/prefs.json').resolve()
+    prefs_path = Path('./prefs.json').resolve()
     with prefs_path.open("w") as f:
         json.dump(pUpdate, f)
 
