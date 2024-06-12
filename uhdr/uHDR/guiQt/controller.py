@@ -26,6 +26,7 @@ package hdrGUI consists of the classes for GUI.
 # --- Import ------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
+import platform
 import enum, sys, subprocess, copy, colour, time, os, shutil, datetime, ctypes
 import numpy as np
 # pyQT5 import
@@ -1007,42 +1008,80 @@ class HDRviewerController():
             self.model.currentIMG = img
         else: self.callBackUpdate()
 
+    # def displayFile(self, HDRfilename):
+    #     """
+    #     HDRviewerController display file: run HDRImageViewer process ti display HDR image (from filename)
+
+    #     Args:
+    #         HDRfilename: string
+    #             Required  : hdr image filename
+                
+    #     """
+
+    #      # check that no current display process already open
+    #     if self.viewerProcess:
+    #         # the display HDR process is already running
+    #         # close current
+    #         #subprocess.run(['taskkill', '/F', '/T', '/IM', "HDRImageViewer*"],capture_output=False)
+    #                 #return call(["taskkill", "/f", "/im", appName], shell=True)
+
+    #                 # return call(["killall", appName], shell=True)`
+
+    #         subprocess.run(['killall',  'HDRImageViewer'], check=False)
+    #         # subprocess.run(['pkill', '-f', 'HDRImageViewer'], check=True)
+
+    #         time.sleep(0.05)
+    #     # run display HDR process
+    #     self.viewerProcess = subprocess.Popen(["HDRImageViewer.exe","-f", "-input:"+HDRfilename, "-f", "-h"], shell=True)
+
+    #     time.sleep(0.10)
+    #     psData = subprocess.run(['ps', '-A'], capture_output=True, universal_newlines=True).stdout
+    #     # psData = subprocess.run(['tasklist'], capture_output=True, universal_newlines=True).stdout
+    #     if not 'HDRImageViewer' in psData: 
+    #         # re-run display HDR process
+    #         self.viewerProcess = subprocess.Popen(["HDRImageViewer.exe","-f", "-input:"+HDRfilename, "-f", "-h"], shell=True)
+
     def displayFile(self, HDRfilename):
         """
-        HDRviewerController display file: run HDRImageViewer process ti display HDR image (from filename)
+        HDRviewerController display file: run Aperçu to display HDR image (from filename)
 
         Args:
             HDRfilename: string
-                Required  : hdr image filename
-                
+                Required: hdr image filename
         """
 
-         # check that no current display process already open
+        # Vérifier s'il y a déjà un processus d'affichage en cours
         if self.viewerProcess:
-            # the display HDR process is already running
-            # close current
-            #subprocess.run(['taskkill', '/F', '/T', '/IM', "HDRImageViewer*"],capture_output=False)
-                    #return call(["taskkill", "/f", "/im", appName], shell=True)
-
-                    # return call(["killall", appName], shell=True)`
-
-            subprocess.run(['killall',  'HDRImageViewer'], check=False)
-            # subprocess.run(['pkill', '-f', 'HDRImageViewer'], check=True)
-
+            # Si un processus est en cours, le terminer
+            if platform.system() == 'Windows':
+                subprocess.run(['taskkill', '/F', '/T', '/IM', 'HDRImageViewer.exe'], check=False)
+            else:
+                subprocess.run(['killall', 'Preview'], check=False)
             time.sleep(0.05)
-        # run display HDR process
-       # self.viewerProcess = subprocess.Popen(["HDRImageViewer.exe","-f", "-input:"+HDRfilename, "-f", "-h"], shell=True)
-        self.viewerProcess = subprocess.Popen(
-    ["wine", "HDRImageViewer.exe", "-f", "-input:" + HDRfilename, "-f", "-h"],
-    shell=True
-)
+
+        # Vérifier le système d'exploitation
+        if platform.system() == 'Darwin':
+            self.viewerProcess = subprocess.Popen(['open', '-a', 'Preview', HDRfilename])
+        elif platform.system() == 'Windows':
+            self.viewerProcess = subprocess.Popen(["HDRImageViewer.exe", "-f", "-input:" + HDRfilename, "-f", "-h"], shell=True)
+        else:
+            print("La fonction displayFile n'est pas prise en charge sur ce système d'exploitation.")
+
+        # Ajouter un court délai pour s'assurer que le processus a démarré
         time.sleep(0.10)
+
+        # Vérifier si le processus est toujours en cours
         psData = subprocess.run(['ps', '-A'], capture_output=True, universal_newlines=True).stdout
-        # psData = subprocess.run(['tasklist'], capture_output=True, universal_newlines=True).stdout
-        if not 'HDRImageViewer' in psData: 
-            # re-run display HDR process
-            #self.viewerProcess = subprocess.Popen(["HDRImageViewer.exe","-f", "-input:"+HDRfilename, "-f", "-h"], shell=True)
-            self.viewerProcess = subprocess.Popen(["wine", "HDRImageViewer.exe", "-f", "-input:" + HDRfilename, "-f", "-h"],shell=True)
+
+        if platform.system() == 'Windows':
+            if 'HDRImageViewer' not in psData:
+                self.viewerProcess = subprocess.Popen(["HDRImageViewer.exe", "-f", "-input:" + HDRfilename, "-f", "-h"], shell=True)
+            # Relancer le processus si nécessaire
+
+        if platform.system() == 'Darwin':
+            if 'Preview' not in psData:
+                self.viewerProcess = subprocess.Popen(['open', '-a', 'Preview', HDRfilename])
+                
 
     def displayIMG(self, img):
         img = img.process(hdrCore.processing.clip())
